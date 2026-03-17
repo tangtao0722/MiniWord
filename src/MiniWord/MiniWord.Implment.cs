@@ -659,14 +659,9 @@ namespace MiniSoftware
                                 AddHtmls(docx, run, new[] { html });
                                 t.Remove();
                             }
-                            else if (value is MiniWordHtml[] htmls)
-                            {
-                                AddHtmls(docx, run, htmls);
-                                t.Remove();
-                            }
                             else if (value is IEnumerable<MiniWordHtml> htmlList)
                             {
-                                AddHtmls(docx, run, htmlList.ToArray());
+                                AddHtmls(docx, run, htmlList);
                                 t.Remove();
                             }
                             else
@@ -1199,10 +1194,11 @@ namespace MiniSoftware
         /// </summary>
         /// <param name="run"></param>
         /// <param name="miniWordHtmls"></param>
-        private static void AddHtmls(WordprocessingDocument docx, Run run, MiniWordHtml[] miniWordHtmls)
+        private static void AddHtmls(WordprocessingDocument docx, Run run, IEnumerable<MiniWordHtml> miniWordHtmls)
         {
             //找到当前顶级段落（body）添加,html中的表格不能直接放在run或者段落里
             Paragraph topPara = FindTopPara(run);
+            if (topPara == null) return;
             foreach (var miniWordHtml in miniWordHtmls)
             {
                 try
@@ -1230,16 +1226,14 @@ namespace MiniSoftware
         /// <returns></returns>
         private static Paragraph FindTopPara(Run run)
         {
-            Paragraph result = null;
-            for (var pnode = run.Parent; pnode != null;)
+            for (var pnode = run.Parent; pnode != null; pnode = pnode.Parent)
             {
                 if (pnode is Paragraph para && pnode.Parent != null && pnode.Parent is Body)
                 {
-                    result = para;
+                    return para;
                 }
-                pnode = pnode.Parent;
             }
-            return result;
+            return null;
         }
 
         #endregion
